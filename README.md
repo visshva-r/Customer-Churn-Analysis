@@ -35,7 +35,8 @@ Used the Telco Customer Churn dataset from Kaggle which contains:
 ## Results (may vary slightly)
 | Model | Accuracy |
 |-------|----------|
-| Logistic Regression | ~0.80 |
-| Random Forest | ~0.82 |
+| Logistic Regression | ~0.79 |
+| Random Forest | ~0.78 |
+
 
 Best performing model: **Logistic Regression**
