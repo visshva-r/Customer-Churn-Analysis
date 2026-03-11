@@ -1,0 +1,44 @@
+# Telco Customer Churn Prediction Framework
+
+## Objective
+Build an advanced machine learning pipeline to predict whether a customer will leave (Churn = Yes/No)[cite: 11]. Unlike standard baseline models that optimize purely for accuracy, this project focuses on maximizing **Recall** for the minority class to successfully identify high-risk churning customers.
+
+## Dataset
+Used the Telco Customer Churn dataset from Kaggle[cite: 11] (7,000+ records) containing:
+- **Services used:** Internet, phone, multiple lines, tech support, etc.[cite: 11]
+- **Account details:** Tenure, contract type, payment method, monthly/total charges.[cite: 11]
+- **Demographic info:** Gender, senior citizen status, partners, and dependents.[cite: 11]
+
+## Methodology & Pipeline
+1. **Data Cleaning:** 
+   - Converted `TotalCharges` to numeric and removed missing values[cite: 11]. 
+   - Dropped non-predictive columns like `customerID`[cite: 11].
+2. **Advanced Feature Engineering:**
+   - **Lifecycle Binning:** Categorized the continuous `tenure` feature into distinct bins (`New`, `Settled`, `Loyal`, `Very Loyal`, `VIP`) to capture customer lifecycle stages.
+   - **Service Aggregation:** Engineered a `Total_Services` feature to quantify user engagement across the platform.
+3. **Handling Data Imbalance:**
+   - Identified a severe 73:27 class imbalance.
+   - Applied **SMOTE (Synthetic Minority Over-sampling Technique)** exclusively on the training set to prevent data leakage and model bias toward the majority class.
+4. **Preprocessing:** 
+   - Encoded categorical features using `LabelEncoder`[cite: 11].
+   - Scaled continuous features using `StandardScaler`[cite: 11].
+   - 80/20 Stratified Train/Validation split[cite: 11].
+
+## Models & Tuning
+- **Baseline Model:** Logistic Regression[cite: 11].
+- **Advanced Model:** XGBoost Classifier.
+- **Hyperparameter Tuning:** Utilized `GridSearchCV` specifically optimizing for **Recall**, iterating over `n_estimators`, `max_depth`, and `learning_rate` to find the optimal architecture.
+
+## Evaluation Metrics
+- **ROC-AUC Score** (Primary performance indicator)
+- Recall, Precision, F1-Score[cite: 11]
+- Confusion Matrix[cite: 11]
+
+## Key Results & Business Impact
+| Model | Accuracy | Churner Recall (Class 1) | ROC-AUC |
+|-------|----------|--------------------------|---------|
+| Logistic Regression (Baseline) | ~73.7% | 0.72 | - |
+| **XGBoost (Tuned + SMOTE)** | **~71.5%** | **0.79** | **0.8136** |
+
+**Conclusion:**
+While raw accuracy[cite: 11] saw a slight dip, the tuned XGBoost model combined with SMOTE successfully boosted the **Recall for churners to 79%**. In a real-world business context, this trade-off is highly desirable: the model correctly flags nearly 80% of at-risk customers, allowing targeted retention strategies, backed by a strong ROC-AUC score of 0.814 indicating robust predictive power.
