@@ -3,6 +3,23 @@
 ## Objective
 Build an advanced machine learning pipeline to predict whether a customer will leave (Churn = Yes/No)[cite: 11]. Unlike standard baseline models that optimize purely for accuracy, this project focuses on maximizing **Recall** for the minority class to successfully identify high-risk churning customers.
 
+## Interactive App (New)
+This repository now includes a simple Streamlit UI (`app.py`) so non-technical users can explore the model.
+
+### How to run the app
+1. **Install dependencies** (example with pip):
+   ```bash
+   pip install streamlit xgboost scikit-learn imbalanced-learn pandas numpy
+   ```
+2. From the project root, run (works even if `streamlit` is not on your PATH):
+   ```bash
+   python -m streamlit run app.py
+   ```
+3. A browser window will open where you can:
+   - Enter a customer profile in the sidebar.
+   - Click **Predict Churn Risk**.
+   - See churn probability, binary prediction, and validation metrics.
+
 ## Dataset
 Used the Telco Customer Churn dataset from Kaggle[cite: 11] (7,000+ records) containing:
 - **Services used:** Internet, phone, multiple lines, tech support, etc.[cite: 11]
