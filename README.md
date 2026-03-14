@@ -7,18 +7,33 @@ Build an advanced machine learning pipeline to predict whether a customer will l
 This repository now includes a simple Streamlit UI (`app.py`) so non-technical users can explore the model.
 
 ### How to run the app
-1. **Install dependencies** (example with pip):
+1. **Install dependencies** (from project root):
    ```bash
-   pip install streamlit xgboost scikit-learn imbalanced-learn pandas numpy
+   pip install -r requirements.txt
    ```
+   Or install manually: `pip install streamlit xgboost scikit-learn imbalanced-learn pandas numpy`
 2. From the project root, run (works even if `streamlit` is not on your PATH):
    ```bash
    python -m streamlit run app.py
    ```
 3. A browser window will open where you can:
    - Enter a customer profile in the sidebar.
-   - Click **Predict Churn Risk**.
-   - See churn probability, binary prediction, and validation metrics.
+   - Use the **Predict for a customer** tab to get churn probability and prediction.
+   - Use the **Model insights** tab to view validation metrics, feature importance, and threshold trade-offs.
+
+### Testing
+To verify the app logic (data load, preprocessing, model training, prediction) without starting the UI, run from the project root:
+```bash
+python tests/test_app.py
+```
+All checks should pass with no errors.
+
+## Project structure
+- `app.py` — Streamlit demo (predict + model insights).
+- `notebooks/churn_analysis.ipynb` — Full pipeline (EDA, feature engineering, baseline + XGBoost, ROC-AUC). Run from the `notebooks/` folder so `../data/` resolves correctly.
+- `data/` — Telco Churn CSV (place dataset here).
+- `requirements.txt` — Python dependencies for the app and notebook.
+- `tests/test_app.py` — Script to test app logic without the UI.
 
 ## Dataset
 Used the Telco Customer Churn dataset from Kaggle[cite: 11] (7,000+ records) containing:
