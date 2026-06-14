@@ -1,12 +1,16 @@
 # Telco Customer Churn Prediction Framework
 
+**Live demo:** [https://visshva-customer-churn-analysis.streamlit.app/](https://visshva-customer-churn-analysis.streamlit.app/)
+
 ## Objective
 Build an advanced machine learning pipeline to predict whether a customer will leave (Churn = Yes/No)[cite: 11]. Unlike standard baseline models that optimize purely for accuracy, this project focuses on maximizing **Recall** for the minority class to successfully identify high-risk churning customers.
 
-## Interactive App (New)
-This repository now includes a simple Streamlit UI (`app.py`) so non-technical users can explore the model.
+## Interactive App
+This repository includes a Streamlit UI (`app.py`) so non-technical users can explore the model.
 
-### How to run the app
+**Try it online:** [https://visshva-customer-churn-analysis.streamlit.app/](https://visshva-customer-churn-analysis.streamlit.app/)
+
+### How to run locally
 1. **Install dependencies** (from project root):
    ```bash
    pip install -r requirements.txt
@@ -28,8 +32,8 @@ python tests/test_app.py
 ```
 All checks should pass with no errors.
 
-### Deploy on Streamlit Community Cloud (free)
-This app is ready to deploy publicly from GitHub.
+### Deploy on Streamlit Community Cloud
+This app is deployed at [https://visshva-customer-churn-analysis.streamlit.app/](https://visshva-customer-churn-analysis.streamlit.app/). To redeploy or fork your own instance:
 
 1. **Push this repo to GitHub** (if not already):  
    [https://github.com/visshva-r/Customer-Churn-Analysis](https://github.com/visshva-r/Customer-Churn-Analysis)
@@ -49,8 +53,9 @@ This app is ready to deploy publicly from GitHub.
 
 5. Click **Deploy**. Streamlit installs packages from `requirements.txt` and starts `app.py`.
 
-6. After the first deploy, your live URL will look like:  
-   `https://customer-churn-analysis-<your-account>.streamlit.app`
+6. After deploy, your live URL will look like:  
+   `https://<your-subdomain>.streamlit.app`  
+   (This project: [https://visshva-customer-churn-analysis.streamlit.app/](https://visshva-customer-churn-analysis.streamlit.app/))
 
 **Notes**
 - The dataset in `data/` is included in the repo, so no extra secrets are needed.
