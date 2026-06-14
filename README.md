@@ -28,6 +28,35 @@ python tests/test_app.py
 ```
 All checks should pass with no errors.
 
+### Deploy on Streamlit Community Cloud (free)
+This app is ready to deploy publicly from GitHub.
+
+1. **Push this repo to GitHub** (if not already):  
+   [https://github.com/visshva-r/Customer-Churn-Analysis](https://github.com/visshva-r/Customer-Churn-Analysis)
+
+2. **Open Streamlit Community Cloud** and sign in with GitHub:  
+   [https://share.streamlit.io](https://share.streamlit.io)
+
+3. Click **Create app** → **From existing repo**.
+
+4. Use these settings:
+   | Setting | Value |
+   |---------|--------|
+   | Repository | `visshva-r/Customer-Churn-Analysis` |
+   | Branch | `main` |
+   | Main file path | `app.py` |
+   | App URL (optional) | e.g. `customer-churn-analysis` |
+
+5. Click **Deploy**. Streamlit installs packages from `requirements.txt` and starts `app.py`.
+
+6. After the first deploy, your live URL will look like:  
+   `https://customer-churn-analysis-<your-account>.streamlit.app`
+
+**Notes**
+- The dataset in `data/` is included in the repo, so no extra secrets are needed.
+- The model trains on first load (a few seconds); later visits use Streamlit cache.
+- Python version on Cloud is usually 3.10–3.12; this project works with those versions.
+
 ## Project structure
 - `app.py` — Streamlit demo (predict + model insights).
 - `notebooks/churn_analysis.ipynb` — Full pipeline (EDA, feature engineering, baseline + XGBoost, ROC-AUC). Run from the `notebooks/` folder so `../data/` resolves correctly.
