@@ -2,8 +2,9 @@
 
 from typing import Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
+
+from src.labels import format_feature, format_shap_series
 
 try:
     import shap
@@ -14,20 +15,19 @@ except ImportError:
 
 
 def _risk_rules(raw_input: dict) -> List[str]:
-    """Rule-based risk factors from raw customer fields."""
     factors = []
     if raw_input.get("Contract") == "Month-to-month":
         factors.append("month-to-month contract")
     if raw_input.get("tenure", 99) <= 12:
-        factors.append("short tenure (≤12 months)")
+        factors.append(f"short tenure ({int(raw_input.get('tenure', 0))} months)")
     if raw_input.get("PaymentMethod") == "Electronic check":
-        factors.append("electronic check payment")
+        factors.append("electronic check billing")
     if raw_input.get("InternetService") == "Fiber optic":
-        factors.append("fiber optic internet (higher churn segment)")
+        factors.append("fiber internet plan")
     if raw_input.get("TechSupport") == "No" and raw_input.get("InternetService") != "No":
-        factors.append("no tech support on internet plan")
+        factors.append("no tech support")
     if raw_input.get("OnlineSecurity") == "No" and raw_input.get("InternetService") != "No":
-        factors.append("no online security add-on")
+        factors.append("no online security")
     return factors[:5]
 
 
@@ -39,7 +39,6 @@ def explain_prediction(
     raw_input: dict,
     top_n: int = 5,
 ) -> Tuple[pd.Series, str]:
-    """Return top SHAP contributors and a plain-English summary."""
     scaled = scaler.transform(features)
 
     if SHAP_AVAILABLE:
@@ -53,46 +52,37 @@ def explain_prediction(
             contrib = pd.Series(values, index=feature_names).sort_values(
                 key=lambda s: s.abs(), ascending=False
             )
-            top = contrib.head(top_n)
-            top_labels = ", ".join(top.index.tolist())
-            summary = f"Higher risk mainly driven by model features: {top_labels}."
+            top = format_shap_series(contrib.head(top_n), raw_input)
+            labels = [idx for idx in top.index]
+            summary = "Main drivers: " + "; ".join(labels[:3]) + "."
+            return top, summary
         except Exception:
-            top = pd.Series(dtype=float)
-            summary = _plain_summary(raw_input)
-    else:
-        top = pd.Series(dtype=float)
-        summary = _plain_summary(raw_input)
+            pass
 
-    if not top.empty:
-        return top, summary
-    return top, _plain_summary(raw_input)
-
-
-def _plain_summary(raw_input: dict) -> str:
     factors = _risk_rules(raw_input)
     if factors:
-        return "Higher risk mainly due to: " + ", ".join(factors) + "."
-    return "Risk profile is moderate based on contract, tenure, and service usage."
+        return pd.Series(dtype=float), "Risk signals: " + ", ".join(factors) + "."
+    return pd.Series(dtype=float), "Balanced profile across contract, tenure, and services."
 
 
-def retention_recommendations(raw_input: dict, predicted_churn: str) -> List[str]:
-    """Rule-based retention actions for high-risk customers."""
+def retention_recommendations(raw_input: dict, predicted_churn: str, proba: float) -> List[str]:
     if predicted_churn != "Yes":
         return [
-            "Customer appears stable — continue standard engagement.",
-            "Consider upselling value-add services (security, backup, streaming bundles).",
+            "Maintain current plan — low immediate churn signal.",
+            "Optional: offer a loyalty perk before contract renewal.",
         ]
 
     recs = []
     if raw_input.get("Contract") == "Month-to-month":
-        recs.append("Offer a discounted 1-year contract to reduce churn risk.")
+        recs.append("Offer a 12-month contract with a one-time bill credit.")
     if raw_input.get("tenure", 99) <= 12:
-        recs.append("Send a welcome/loyalty outreach in the first 90 days.")
+        recs.append("Assign a onboarding specialist for the first 90 days.")
     if raw_input.get("PaymentMethod") == "Electronic check":
-        recs.append("Switch customer to automatic bank transfer with a small incentive.")
-    if raw_input.get("TechSupport") == "No":
-        recs.append("Bundle tech support or run a proactive support check-in.")
+        recs.append("Move to auto-pay with a $10/month discount for 6 months.")
+    if raw_input.get("TechSupport") == "No" and raw_input.get("InternetService") != "No":
+        recs.append("Include tech support free for 3 months.")
+    if proba >= 0.7:
+        recs.append("Priority retention queue — manager callback within 48 hours.")
     if not recs:
-        recs.append("Offer a targeted retention discount or personalized plan review.")
-    recs.append("Schedule a retention call within 7 days for at-risk accounts.")
+        recs.append("Personalized plan review with a retention specialist.")
     return recs[:3]

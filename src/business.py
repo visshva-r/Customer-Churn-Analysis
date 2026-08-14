@@ -5,13 +5,14 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 
+# Assumed average revenue at risk per churner (illustrative for retention ROI)
+DEFAULT_LTV_USD = 500
+DEFAULT_CHURN_RATE = 0.27
+
 
 def threshold_summary(threshold_curve: pd.DataFrame, threshold: float) -> Dict[str, float]:
-    """Interpolate business metrics at the selected threshold."""
     curve = threshold_curve.sort_values("threshold")
-    recall = float(
-        np.interp(threshold, curve["threshold"], curve["recall_churn"])
-    )
+    recall = float(np.interp(threshold, curve["threshold"], curve["recall_churn"]))
     precision = float(
         np.interp(threshold, curve["threshold"], curve["precision_churn"])
     )
@@ -22,13 +23,41 @@ def threshold_summary(threshold_curve: pd.DataFrame, threshold: float) -> Dict[s
         "recall_churn_pct": recall * 100,
         "precision_churn_pct": precision * 100,
         "flagged_pct": flagged_pct * 100,
+        "recall_churn": recall,
     }
 
 
 def business_message(threshold: float, summary: Dict[str, float]) -> str:
     return (
-        f"At threshold **{threshold:.2f}**, the model catches "
-        f"**{summary['recall_churn_pct']:.1f}%** of churners but must contact "
-        f"**{summary['flagged_pct']:.1f}%** of all customers "
-        f"(churn precision: **{summary['precision_churn_pct']:.1f}%**)."
+        f"At a **{threshold:.2f}** cutoff, you reach "
+        f"**{summary['recall_churn_pct']:.1f}%** of churners while flagging "
+        f"**{summary['flagged_pct']:.1f}%** of the base "
+        f"(precision **{summary['precision_churn_pct']:.1f}%**)."
     )
+
+
+def retention_roi_estimate(
+    summary: Dict[str, float],
+    portfolio_size: int = 1000,
+    ltv_usd: float = DEFAULT_LTV_USD,
+    churn_rate: float = DEFAULT_CHURN_RATE,
+) -> Dict[str, float]:
+    """Rough ROI if retention saves a share of flagged churners."""
+    expected_churners = portfolio_size * churn_rate
+    recall = summary.get("recall_churn", summary["recall_churn_pct"] / 100)
+    churners_caught = expected_churners * recall
+    customers_flagged = portfolio_size * (summary["flagged_pct"] / 100)
+    revenue_at_risk = expected_churners * ltv_usd
+    revenue_protected = churners_caught * ltv_usd
+    missed_churners = expected_churners - churners_caught
+    missed_revenue = missed_churners * ltv_usd
+    return {
+        "portfolio_size": portfolio_size,
+        "ltv_usd": ltv_usd,
+        "expected_churners": expected_churners,
+        "churners_caught": churners_caught,
+        "customers_flagged": customers_flagged,
+        "revenue_at_risk": revenue_at_risk,
+        "revenue_protected": revenue_protected,
+        "missed_revenue": missed_revenue,
+    }

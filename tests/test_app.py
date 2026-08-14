@@ -106,7 +106,7 @@ def test_explain_and_business():
         raw,
     )
     assert isinstance(summary, str)
-    recs = retention_recommendations(raw, pred)
+    recs = retention_recommendations(raw, pred, 0.5)
     assert len(recs) >= 2
     th_summary = threshold_summary(artifacts["metrics"]["threshold_curve"], 0.5)
     msg = business_message(0.5, th_summary)
