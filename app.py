@@ -67,7 +67,9 @@ def render_risk_gauge(proba: float, label: str):
     st.caption(f"Prediction at current threshold: **{label}**")
 
 
-def build_user_input(raw_df: pd.DataFrame, defaults: dict | None = None) -> dict:
+def build_user_input(
+    raw_df: pd.DataFrame, defaults: dict | None = None, preset_key: str = "Custom"
+) -> dict:
     defaults = defaults or {}
     input_data = {}
 
@@ -75,7 +77,9 @@ def build_user_input(raw_df: pd.DataFrame, defaults: dict | None = None) -> dict
         options = sorted(raw_df[column].unique().tolist())
         default = defaults.get(column, options[0])
         idx = options.index(default) if default in options else 0
-        return container.selectbox(label, options, index=idx)
+        return container.selectbox(
+            label, options, index=idx, key=f"{preset_key}_{column}"
+        )
 
     def num_input(label, column, container, step=1.0):
         col_data = pd.to_numeric(raw_df[column], errors="coerce").dropna()
@@ -86,6 +90,7 @@ def build_user_input(raw_df: pd.DataFrame, defaults: dict | None = None) -> dict
             float(col_data.max()),
             default,
             step=step,
+            key=f"{preset_key}_{column}",
         )
 
     with st.sidebar.expander("Demographics", expanded=True):
@@ -93,7 +98,12 @@ def build_user_input(raw_df: pd.DataFrame, defaults: dict | None = None) -> dict
         senior_default = "Yes" if defaults.get("SeniorCitizen") == 1 else "No"
         senior_options = ["No", "Yes"]
         senior_idx = senior_options.index(senior_default) if senior_default in senior_options else 0
-        senior_choice = st.selectbox("Senior citizen", senior_options, index=senior_idx)
+        senior_choice = st.selectbox(
+            "Senior citizen",
+            senior_options,
+            index=senior_idx,
+            key=f"{preset_key}_SeniorCitizen",
+        )
         input_data["SeniorCitizen"] = {"No": 0, "Yes": 1}[senior_choice]
         input_data["Partner"] = cat_select("Partner", "Partner", st)
         input_data["Dependents"] = cat_select("Dependents", "Dependents", st)
@@ -209,7 +219,7 @@ def main():
 
     with tab_score:
         st.sidebar.markdown("### Customer profile")
-        user_input = build_user_input(raw_df, profile_defaults)
+        user_input = build_user_input(raw_df, profile_defaults, preset_choice)
 
         if st.sidebar.button("Run churn score", type="primary", use_container_width=True):
             proba, pred, features = predict_single(

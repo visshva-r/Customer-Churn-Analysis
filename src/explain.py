@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
-from src.labels import format_feature, format_shap_series
+from src.labels import format_shap_series
 
 try:
     import shap

@@ -58,7 +58,7 @@ def test_save_and_load_artifacts():
 
 
 def test_single_and_batch_prediction():
-    from src.data import load_raw_data, preprocess_data
+    from src.data import load_raw_data
     from src.predict import predict_batch, predict_single
     from src.train import train_pipeline
 
