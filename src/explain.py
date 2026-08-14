@@ -54,35 +54,35 @@ def explain_prediction(
             )
             top = format_shap_series(contrib.head(top_n), raw_input)
             labels = [idx for idx in top.index]
-            summary = "Main drivers: " + "; ".join(labels[:3]) + "."
+            summary = "Top factors: " + "; ".join(labels[:3]) + "."
             return top, summary
         except Exception:
             pass
 
     factors = _risk_rules(raw_input)
     if factors:
-        return pd.Series(dtype=float), "Risk signals: " + ", ".join(factors) + "."
-    return pd.Series(dtype=float), "Balanced profile across contract, tenure, and services."
+        return pd.Series(dtype=float), "Risk signals include " + ", ".join(factors) + "."
+    return pd.Series(dtype=float), "No strong churn signals in contract, tenure, or services."
 
 
 def retention_recommendations(raw_input: dict, predicted_churn: str, proba: float) -> List[str]:
     if predicted_churn != "Yes":
         return [
-            "Maintain current plan — low immediate churn signal.",
-            "Optional: offer a loyalty perk before contract renewal.",
+            "No urgent retention action needed.",
+            "Optional: send a loyalty offer before renewal.",
         ]
 
     recs = []
     if raw_input.get("Contract") == "Month-to-month":
         recs.append("Offer a 12-month contract with a one-time bill credit.")
     if raw_input.get("tenure", 99) <= 12:
-        recs.append("Assign a onboarding specialist for the first 90 days.")
+        recs.append("Assign an onboarding specialist for the first 90 days.")
     if raw_input.get("PaymentMethod") == "Electronic check":
         recs.append("Move to auto-pay with a $10/month discount for 6 months.")
     if raw_input.get("TechSupport") == "No" and raw_input.get("InternetService") != "No":
         recs.append("Include tech support free for 3 months.")
     if proba >= 0.7:
-        recs.append("Priority retention queue — manager callback within 48 hours.")
+        recs.append("Escalate to a manager callback within 48 hours.")
     if not recs:
-        recs.append("Personalized plan review with a retention specialist.")
+        recs.append("Schedule a plan review with a retention specialist.")
     return recs[:3]

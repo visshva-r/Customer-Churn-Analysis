@@ -1,81 +1,72 @@
 # Churn Retention Scorer
 
-**Catches ~79% of churners at 0.81 ROC-AUC** — live retention scoring demo for telco customer churn.
+Telco churn prediction with a recall-focused XGBoost model. Validation performance: ~79% churn recall, 0.81 ROC-AUC.
 
 [![Live Demo](https://img.shields.io/badge/demo-streamlit.app-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://visshva-customer-churn-analysis.streamlit.app/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 
 **Live app:** [visshva-customer-churn-analysis.streamlit.app](https://visshva-customer-churn-analysis.streamlit.app/)
 
----
+## Overview
 
-## What this project does
+This project predicts which telco customers are likely to churn. The model is tuned for recall so more at-risk customers get flagged, even if that means contacting some who would have stayed.
 
-Predicts which telco customers are likely to churn, optimized for **recall** (catching at-risk users) rather than raw accuracy. Includes SHAP explanations, batch CSV scoring, and a retention ROI view for business stakeholders.
+The repo includes a reusable pipeline in `src/`, a Streamlit app, saved model artifacts, tests, and the original analysis notebook.
 
-Built as a full pipeline (`src/`) with a deployed Streamlit front-end — same methodology as the analysis notebook.
+## App tabs
 
-## Demo highlights
+| Tab | What it does |
+|-----|----------------|
+| Score a customer | Run a single prediction with SHAP factors and next-step suggestions |
+| Bulk scoring | Upload a CSV and download churn probabilities |
+| Model performance | Compare Logistic Regression vs XGBoost on the validation set |
+| Retention ROI | Rough estimate of outreach volume and revenue impact |
 
-| Tab | Purpose |
-|-----|---------|
-| **Score a customer** | Example profiles, risk gauge, SHAP drivers, retention plays |
-| **Bulk scoring** | Upload CSV → export churn probabilities |
-| **Model performance** | Logistic vs XGBoost, confusion matrix, threshold curves |
-| **Retention ROI** | Outreach volume vs revenue protected (adjustable LTV) |
+Use the example profiles in the sidebar to try a high-risk, stable, or new-customer scenario quickly.
 
-Try the **example profiles** in the sidebar (high-risk, stable loyal, new fiber) for instant demo scenarios.
-
-## Architecture
+## Pipeline
 
 ```
-data/ → src/data.py → src/train.py → models/ → app.py (Streamlit)
+data/ -> src/data.py -> src/train.py -> models/ -> app.py
 ```
 
-- SMOTE on training set only · stratified 80/20 split · tuned XGBoost (`lr=0.01`, `depth=3`, `n=100`)
-- Saved joblib artifacts for fast cold starts on Streamlit Cloud
+- SMOTE on the training set only
+- Stratified 80/20 split
+- Tuned XGBoost: `learning_rate=0.01`, `max_depth=3`, `n_estimators=100`
+- Model artifacts saved with joblib for faster app startup
 
 ## Run locally
 
 ```bash
 pip install -r requirements.txt
-python scripts/train_and_save.py    # optional — models/ already included
+python scripts/train_and_save.py    # optional; models/ is already in the repo
 python -m streamlit run app.py
 python tests/test_app.py
 ```
 
-## Results (validation set)
+## Validation results
 
 | Model | Accuracy | Churn recall | ROC-AUC |
 |-------|----------|--------------|---------|
 | Logistic Regression | 0.737 | 0.72 | 0.809 |
-| **XGBoost + SMOTE** | **0.716** | **0.79** | **0.814** |
+| XGBoost + SMOTE | 0.716 | 0.79 | 0.814 |
 
 ## Project layout
 
 ```
 app.py                    Streamlit UI
-src/                      Reusable ML pipeline
-scripts/train_and_save.py Train + persist artifacts
+src/                      ML pipeline modules
+scripts/train_and_save.py Train and save artifacts
 models/                   Saved model, scaler, encoders
-notebooks/                Full EDA + GridSearch notebook
-data/                     Dataset + sample_customers.csv
-tests/                    Pipeline tests + GitHub Actions CI
+notebooks/                EDA and GridSearch notebook
+data/                     Dataset and sample_customers.csv
+tests/                    Pipeline tests (GitHub Actions on push)
 ```
-
-## Screenshots
-
-Capture from the live app after deploy:
-1. Score a customer (risk gauge + SHAP)
-2. Retention ROI tab
-3. Model performance comparison
-
-Save to `docs/screenshots/` and embed here for portfolio polish.
 
 ## Deploy
 
-Push to GitHub → [share.streamlit.io](https://share.streamlit.io) → main file `app.py`, Python 3.11.
+Push to GitHub, then deploy on [share.streamlit.io](https://share.streamlit.io) with main file `app.py` and Python 3.11.
 
 ## Dataset
 
-Telco Customer Churn (Kaggle) — 7,000+ records with service usage, billing, contract, and demographics.
+Telco Customer Churn dataset from Kaggle (~7,000 rows): service usage, billing, contract type, and demographics.

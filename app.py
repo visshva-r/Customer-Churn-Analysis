@@ -58,13 +58,13 @@ def render_risk_gauge(proba: float, label: str):
     st.markdown(
         f"""
         <div class="risk-card {css_class}">
-            <strong>Churn risk: {band}</strong> &nbsp;·&nbsp; {proba:.1%} probability
+            <strong>Churn risk: {band}</strong> ({proba:.1%})
         </div>
         """,
         unsafe_allow_html=True,
     )
     st.progress(min(max(proba, 0.0), 1.0))
-    st.caption(f"Prediction at current threshold: **{label}**")
+    st.caption(f"Label at current threshold: **{label}**")
 
 
 def build_user_input(
@@ -131,14 +131,14 @@ def build_user_input(
 
 
 def main():
-    st.set_page_config(page_title="Churn Retention Scorer", layout="wide", page_icon="📡")
+    st.set_page_config(page_title="Churn Retention Scorer", layout="wide")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
     st.markdown(
         """
         <div class="hero">
             <h1>Churn Retention Scorer</h1>
-            <p>Catches ~79% of churners · ROC-AUC 0.81 · Built for retention teams, not just accuracy</p>
+            <p>Validation: ~79% churn recall, 0.81 ROC-AUC. Tuned to flag at-risk customers.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -160,7 +160,7 @@ def main():
     preset_choice = st.sidebar.selectbox(
         "Example profile",
         ["Custom"] + list(PRESETS.keys()),
-        help="Load a realistic customer scenario for demos.",
+        help="Load a sample customer for quick testing.",
     )
     profile_defaults = PRESETS.get(preset_choice)
 
@@ -171,7 +171,7 @@ def main():
     raw_df = load_raw_data()
 
     with tab_model:
-        st.markdown("Validation set comparison — same split and tuned hyperparameters as the notebook.")
+        st.markdown("Validation results using the same split and hyperparameters as the notebook.")
         comparison = pd.DataFrame(
             {"Logistic Regression": metrics["baseline"], "XGBoost (tuned)": metrics["xgb"]}
         ).T[["accuracy", "churn_recall", "churn_precision", "roc_auc"]]
@@ -187,7 +187,7 @@ def main():
             st.dataframe(pd.DataFrame(cm, index=["Stay", "Churn"], columns=["Stay", "Churn"]))
         with col2:
             fi = metrics["feature_importance"].head(8).sort_values()
-            st.caption("What the model weighs most")
+            st.caption("Most important features")
             st.bar_chart(fi)
 
         th_df = metrics["threshold_curve"]
@@ -197,7 +197,7 @@ def main():
         )
 
     with tab_roi:
-        st.markdown("Translate model output into outreach volume and revenue at risk.")
+        st.markdown("Estimate outreach volume and revenue impact at the selected threshold.")
         summary = threshold_summary(metrics["threshold_curve"], decision_threshold)
         st.markdown(business_message(decision_threshold, summary))
 
@@ -212,16 +212,15 @@ def main():
         c4.metric("Revenue still at risk", f"${roi['missed_revenue']:,.0f}")
 
         st.caption(
-            f"Illustrative model: ~{portfolio_size} customers, "
-            f"~27% historical churn rate, ${ltv:,.0f} LTV per lost customer. "
-            "Adjust inputs to match your business."
+            f"Assumes {portfolio_size} customers, 27% churn rate, "
+            f"${ltv:,.0f} LTV per lost customer. Adjust to fit your numbers."
         )
 
     with tab_score:
         st.sidebar.markdown("### Customer profile")
         user_input = build_user_input(raw_df, profile_defaults, preset_choice)
 
-        if st.sidebar.button("Run churn score", type="primary", use_container_width=True):
+        if st.sidebar.button("Score customer", type="primary", use_container_width=True):
             proba, pred, features = predict_single(
                 model, scaler, encoders, feature_names, user_input, decision_threshold
             )
@@ -233,18 +232,18 @@ def main():
                 top_factors, summary = explain_prediction(
                     model, scaler, features, feature_names, user_input
                 )
-                st.markdown(f"**Why this score?** {summary}")
+                st.markdown(f"**What drove this score:** {summary}")
                 if not top_factors.empty:
-                    st.caption("SHAP contribution (top factors)")
+                    st.caption("Top SHAP factors")
                     st.bar_chart(top_factors.sort_values())
 
-            st.markdown("**Suggested retention plays**")
+            st.markdown("**Recommended next steps**")
             recs = retention_recommendations(user_input, pred, proba)
             for rec in recs:
                 st.markdown(f"- {rec}")
 
     with tab_bulk:
-        st.markdown("Upload a customer list (same columns as training data; `Churn` optional).")
+        st.markdown("Upload a CSV with the same columns as the training data. The `Churn` column is optional.")
         sample_path = os.path.join(project_root(), "data", "sample_customers.csv")
         with open(sample_path, "rb") as f:
             st.download_button(

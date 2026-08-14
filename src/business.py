@@ -29,9 +29,9 @@ def threshold_summary(threshold_curve: pd.DataFrame, threshold: float) -> Dict[s
 
 def business_message(threshold: float, summary: Dict[str, float]) -> str:
     return (
-        f"At a **{threshold:.2f}** cutoff, you reach "
-        f"**{summary['recall_churn_pct']:.1f}%** of churners while flagging "
-        f"**{summary['flagged_pct']:.1f}%** of the base "
+        f"At cutoff **{threshold:.2f}**, the model finds "
+        f"**{summary['recall_churn_pct']:.1f}%** of churners and flags "
+        f"**{summary['flagged_pct']:.1f}%** of customers "
         f"(precision **{summary['precision_churn_pct']:.1f}%**)."
     )
 

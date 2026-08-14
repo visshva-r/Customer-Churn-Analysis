@@ -110,7 +110,7 @@ def test_explain_and_business():
     assert len(recs) >= 2
     th_summary = threshold_summary(artifacts["metrics"]["threshold_curve"], 0.5)
     msg = business_message(0.5, th_summary)
-    assert "threshold" in msg.lower() or "0.50" in msg
+    assert "cutoff" in msg.lower() or "0.50" in msg
     print("OK explain_and_business")
 
 
