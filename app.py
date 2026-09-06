@@ -131,14 +131,14 @@ def build_user_input(
 
 
 def main():
-    st.set_page_config(page_title="Churn Retention Scorer", layout="wide")
+    st.set_page_config(page_title="Customer Churn Analysis", layout="wide")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
     st.markdown(
         """
         <div class="hero">
-            <h1>Churn Retention Scorer</h1>
-            <p>Validation: ~79% churn recall, 0.81 ROC-AUC. Tuned to flag at-risk customers.</p>
+            <h1>Customer Churn Analysis</h1>
+            <p>Recall-focused XGBoost model. Validation: ~79% churn recall, 0.81 ROC-AUC.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -158,9 +158,9 @@ def main():
     )
 
     preset_choice = st.sidebar.selectbox(
-        "Example profile",
+        "Sample profile",
         ["Custom"] + list(PRESETS.keys()),
-        help="Load a sample customer for quick testing.",
+        help="Load a sample customer profile.",
     )
     profile_defaults = PRESETS.get(preset_choice)
 
@@ -171,7 +171,7 @@ def main():
     raw_df = load_raw_data()
 
     with tab_model:
-        st.markdown("Validation results using the same split and hyperparameters as the notebook.")
+        st.markdown("Validation results (same split and hyperparameters as the notebook).")
         comparison = pd.DataFrame(
             {"Logistic Regression": metrics["baseline"], "XGBoost (tuned)": metrics["xgb"]}
         ).T[["accuracy", "churn_recall", "churn_precision", "roc_auc"]]

@@ -1,6 +1,6 @@
-# Churn Retention Scorer
+# Customer Churn Analysis
 
-Telco churn prediction with a recall-focused XGBoost model. Validation performance: ~79% churn recall, 0.81 ROC-AUC.
+Predicts which customers are likely to churn using a recall-focused XGBoost model. Validation: ~79% churn recall, 0.81 ROC-AUC.
 
 [![Live Demo](https://img.shields.io/badge/demo-streamlit.app-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://visshva-customer-churn-analysis.streamlit.app/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
@@ -9,20 +9,20 @@ Telco churn prediction with a recall-focused XGBoost model. Validation performan
 
 ## Overview
 
-This project predicts which telco customers are likely to churn. The model is tuned for recall so more at-risk customers get flagged, even if that means contacting some who would have stayed.
+This project builds a machine learning pipeline to identify customers at risk of leaving. The model is tuned for recall so more churners are caught, even if that means flagging some customers who would have stayed.
 
-The repo includes a reusable pipeline in `src/`, a Streamlit app, saved model artifacts, tests, and the original analysis notebook.
+Includes a reusable pipeline in `src/`, a Streamlit app, saved model artifacts, tests, and an analysis notebook.
 
-## App tabs
+## App features
 
-| Tab | What it does |
-|-----|----------------|
-| Score a customer | Run a single prediction with SHAP factors and next-step suggestions |
+| Tab | Description |
+|-----|-------------|
+| Score a customer | Single prediction with SHAP feature contributions and next-step suggestions |
 | Bulk scoring | Upload a CSV and download churn probabilities |
-| Model performance | Compare Logistic Regression vs XGBoost on the validation set |
-| Retention ROI | Rough estimate of outreach volume and revenue impact |
+| Model performance | Logistic Regression vs XGBoost on the validation set |
+| Retention ROI | Estimate outreach volume and revenue impact at a chosen threshold |
 
-Use the example profiles in the sidebar to try a high-risk, stable, or new-customer scenario quickly.
+Sample customer profiles are available in the sidebar for testing.
 
 ## Pipeline
 
@@ -30,10 +30,10 @@ Use the example profiles in the sidebar to try a high-risk, stable, or new-custo
 data/ -> src/data.py -> src/train.py -> models/ -> app.py
 ```
 
-- SMOTE on the training set only
-- Stratified 80/20 split
+- SMOTE applied on the training set only
+- Stratified 80/20 train/validation split
 - Tuned XGBoost: `learning_rate=0.01`, `max_depth=3`, `n_estimators=100`
-- Model artifacts saved with joblib for faster app startup
+- Model artifacts saved with joblib
 
 ## Run locally
 
@@ -69,4 +69,4 @@ Push to GitHub, then deploy on [share.streamlit.io](https://share.streamlit.io) 
 
 ## Dataset
 
-Telco Customer Churn dataset from Kaggle (~7,000 rows): service usage, billing, contract type, and demographics.
+IBM Telco Customer Churn dataset (~7,000 rows): service usage, billing, contract type, and demographics.
