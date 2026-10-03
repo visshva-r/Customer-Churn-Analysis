@@ -46,10 +46,28 @@ python tests/test_app.py
 
 ## Validation results
 
+Holdout set: stratified 20% split (`random_state=42`). Same numbers shown in the Streamlit app (loaded from `models/metrics.joblib`).
+
 | Model | Accuracy | Churn recall | ROC-AUC |
 |-------|----------|--------------|---------|
-| Logistic Regression | 0.737 | 0.72 | 0.809 |
-| XGBoost + SMOTE | 0.716 | 0.79 | 0.814 |
+| Logistic Regression | 0.737 | 0.717 | 0.809 |
+| XGBoost + SMOTE | 0.716 | 0.789 | 0.814 |
+
+Rounded for resume talking points: **~79% churn recall**, **0.81 ROC-AUC** on the tuned XGBoost model.
+
+## How I optimized recall (interviews)
+
+1. **Problem framing:** Churn is imbalanced (~73% stay / ~27% churn). Missing a churner is often costlier than a false alarm, so the goal was high **recall on the churn class**, not maximum accuracy.
+
+2. **Resampling without leakage:** Applied **SMOTE only on the training set** after an 80/20 stratified split so the validation set stays realistic.
+
+3. **Hyperparameter search:** In `notebooks/churn_analysis.ipynb`, used **GridSearchCV with `scoring='recall'`** over `n_estimators`, `max_depth`, and `learning_rate`. Best params (`lr=0.01`, `depth=3`, `n=100`) are fixed in `src/constants.py` for the app and `scripts/train_and_save.py`.
+
+4. **Model choice:** Compared a **Logistic Regression** baseline to **XGBoost**. XGBoost trades a small accuracy drop for higher churn recall (0.717 → 0.789) while keeping strong ranking performance (ROC-AUC 0.814).
+
+5. **Operating point:** Default classification uses threshold 0.5; the app includes a **threshold slider** and ROI tab to discuss precision vs recall vs how many customers you contact.
+
+**Live demo:** [visshva-customer-churn-analysis.streamlit.app](https://visshva-customer-churn-analysis.streamlit.app/) — scores single customers, batch CSV, SHAP factors, and model comparison.
 
 ## Project layout
 
