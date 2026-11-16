@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -45,7 +46,13 @@ def get_artifacts():
     return load_or_train()
 
 
+def _python_float(value) -> float:
+    """Streamlit widgets reject numpy scalar types."""
+    return float(value)
+
+
 def risk_band(proba: float) -> tuple[str, str]:
+    proba = _python_float(proba)
     if proba >= 0.65:
         return "High", "risk-high"
     if proba >= 0.4:
@@ -54,6 +61,7 @@ def risk_band(proba: float) -> tuple[str, str]:
 
 
 def render_risk_gauge(proba: float, label: str):
+    proba = _python_float(proba)
     band, css_class = risk_band(proba)
     st.markdown(
         f"""
@@ -63,7 +71,7 @@ def render_risk_gauge(proba: float, label: str):
         """,
         unsafe_allow_html=True,
     )
-    st.progress(min(max(proba, 0.0), 1.0))
+    st.progress(float(np.clip(proba, 0.0, 1.0)))
     st.caption(f"Label at current threshold: **{label}**")
 
 
@@ -73,18 +81,18 @@ def build_user_input(
     defaults = defaults or {}
     input_data = {}
 
-    def cat_select(label, column, container):
+    def cat_select(label, column):
         options = sorted(raw_df[column].unique().tolist())
         default = defaults.get(column, options[0])
         idx = options.index(default) if default in options else 0
-        return container.selectbox(
+        return st.selectbox(
             label, options, index=idx, key=f"{preset_key}_{column}"
         )
 
-    def num_input(label, column, container, step=1.0):
+    def num_input(label, column, step=1.0):
         col_data = pd.to_numeric(raw_df[column], errors="coerce").dropna()
         default = float(defaults.get(column, col_data.median()))
-        return container.number_input(
+        return st.number_input(
             label,
             float(col_data.min()),
             float(col_data.max()),
@@ -94,7 +102,7 @@ def build_user_input(
         )
 
     with st.sidebar.expander("Demographics", expanded=True):
-        input_data["gender"] = cat_select("Gender", "gender", st)
+        input_data["gender"] = cat_select("Gender", "gender")
         senior_default = "Yes" if defaults.get("SeniorCitizen") == 1 else "No"
         senior_options = ["No", "Yes"]
         senior_idx = senior_options.index(senior_default) if senior_default in senior_options else 0
@@ -105,27 +113,27 @@ def build_user_input(
             key=f"{preset_key}_SeniorCitizen",
         )
         input_data["SeniorCitizen"] = {"No": 0, "Yes": 1}[senior_choice]
-        input_data["Partner"] = cat_select("Partner", "Partner", st)
-        input_data["Dependents"] = cat_select("Dependents", "Dependents", st)
-        input_data["tenure"] = num_input("Tenure (months)", "tenure", st, step=1.0)
+        input_data["Partner"] = cat_select("Partner", "Partner")
+        input_data["Dependents"] = cat_select("Dependents", "Dependents")
+        input_data["tenure"] = num_input("Tenure (months)", "tenure", step=1.0)
 
     with st.sidebar.expander("Services", expanded=False):
-        input_data["PhoneService"] = cat_select("Phone service", "PhoneService", st)
-        input_data["MultipleLines"] = cat_select("Multiple lines", "MultipleLines", st)
-        input_data["InternetService"] = cat_select("Internet service", "InternetService", st)
-        input_data["OnlineSecurity"] = cat_select("Online security", "OnlineSecurity", st)
-        input_data["OnlineBackup"] = cat_select("Online backup", "OnlineBackup", st)
-        input_data["DeviceProtection"] = cat_select("Device protection", "DeviceProtection", st)
-        input_data["TechSupport"] = cat_select("Tech support", "TechSupport", st)
-        input_data["StreamingTV"] = cat_select("Streaming TV", "StreamingTV", st)
-        input_data["StreamingMovies"] = cat_select("Streaming movies", "StreamingMovies", st)
+        input_data["PhoneService"] = cat_select("Phone service", "PhoneService")
+        input_data["MultipleLines"] = cat_select("Multiple lines", "MultipleLines")
+        input_data["InternetService"] = cat_select("Internet service", "InternetService")
+        input_data["OnlineSecurity"] = cat_select("Online security", "OnlineSecurity")
+        input_data["OnlineBackup"] = cat_select("Online backup", "OnlineBackup")
+        input_data["DeviceProtection"] = cat_select("Device protection", "DeviceProtection")
+        input_data["TechSupport"] = cat_select("Tech support", "TechSupport")
+        input_data["StreamingTV"] = cat_select("Streaming TV", "StreamingTV")
+        input_data["StreamingMovies"] = cat_select("Streaming movies", "StreamingMovies")
 
     with st.sidebar.expander("Billing & contract", expanded=False):
-        input_data["Contract"] = cat_select("Contract", "Contract", st)
-        input_data["PaperlessBilling"] = cat_select("Paperless billing", "PaperlessBilling", st)
-        input_data["PaymentMethod"] = cat_select("Payment method", "PaymentMethod", st)
-        input_data["MonthlyCharges"] = num_input("Monthly charges ($)", "MonthlyCharges", st, step=1.0)
-        input_data["TotalCharges"] = num_input("Total charges ($)", "TotalCharges", st, step=10.0)
+        input_data["Contract"] = cat_select("Contract", "Contract")
+        input_data["PaperlessBilling"] = cat_select("Paperless billing", "PaperlessBilling")
+        input_data["PaymentMethod"] = cat_select("Payment method", "PaymentMethod")
+        input_data["MonthlyCharges"] = num_input("Monthly charges ($)", "MonthlyCharges", step=1.0)
+        input_data["TotalCharges"] = num_input("Total charges ($)", "TotalCharges", step=10.0)
 
     return input_data
 
@@ -180,17 +188,17 @@ def main():
 
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("ROC-AUC", f"{metrics['roc_auc']:.3f}")
-            st.metric("Churn recall", f"{metrics['churn_recall']:.3f}")
-            cm = metrics["confusion_matrix"]
+            st.metric("ROC-AUC", f"{_python_float(metrics['roc_auc']):.3f}")
+            st.metric("Churn recall", f"{_python_float(metrics['churn_recall']):.3f}")
+            cm = np.asarray(metrics["confusion_matrix"])
             st.caption("Confusion matrix (actual → predicted)")
             st.dataframe(pd.DataFrame(cm, index=["Stay", "Churn"], columns=["Stay", "Churn"]))
         with col2:
-            fi = metrics["feature_importance"].head(8).sort_values()
+            fi = pd.Series(metrics["feature_importance"]).head(8).sort_values()
             st.caption("Most important features")
             st.bar_chart(fi)
 
-        th_df = metrics["threshold_curve"]
+        th_df = pd.DataFrame(metrics["threshold_curve"])
         st.caption("Threshold trade-off curve")
         st.line_chart(
             th_df.set_index("threshold")[["recall_churn", "precision_churn", "flagged_pct"]]
@@ -260,7 +268,7 @@ def main():
             results = predict_batch(
                 model, scaler, encoders, feature_names, batch_df, decision_threshold
             )
-            high_risk = (results["Churn_Probability"] >= decision_threshold).sum()
+            high_risk = int((results["Churn_Probability"] >= decision_threshold).sum())
             st.metric("Flagged for outreach", f"{high_risk} / {len(results)}")
             st.dataframe(results.head(25), use_container_width=True)
             st.download_button(

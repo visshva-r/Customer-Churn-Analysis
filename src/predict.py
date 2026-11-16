@@ -28,7 +28,7 @@ def predict_single(
     features = encode_features(
         pd.DataFrame([raw_input]), encoders, feature_names
     )
-    proba = predict_proba(model, scaler, features)[0]
+    proba = float(predict_proba(model, scaler, features)[0])
     label = "Yes" if proba >= threshold else "No"
     return proba, label, features
 
